@@ -4,11 +4,12 @@ import Ajv2020, {AnySchemaObject} from "ajv/dist/2020.js";
 import {readFile} from "fs/promises";
 import {getLogger} from "@ui5/logger";
 import {InvalidInputError} from "../../utils.js";
+import {getManifestSchema} from "../../utils/ui5Manifest.js";
 
 const log = getLogger("tools:run_manifest_validation:runValidation");
 const schemaCache = new Map<string, Promise<object>>();
 
-async function createUI5ManifestValidateFunction() {
+async function createUI5ManifestValidateFunction(ui5Schema: object) {
 	const ajv = new Ajv2020.default({
 		allErrors: true, // Collect all errors, not just the first one
 		strict: false, // Allow additional properties that are not in schema
@@ -67,12 +68,7 @@ async function createUI5ManifestValidateFunction() {
 	ajv.addMetaSchema(draft06MetaSchema, "http://json-schema.org/draft-06/schema#");
 	ajv.addMetaSchema(draft07MetaSchema, "http://json-schema.org/draft-07/schema#");
 
-	// Fetch the UI5 manifest schema
-	const schemaUrl = "https://raw.githubusercontent.com/SAP/ui5-manifest/master/schema.json";
-	const schema = await fetchCdn(schemaUrl);
-	log.info(`Fetched UI5 manifest schema from ${schemaUrl}`);
-
-	const validate = await ajv.compileAsync(schema);
+	const validate = await ajv.compileAsync(ui5Schema);
 
 	return validate;
 }
@@ -102,7 +98,10 @@ export default async function runValidation(manifestPath: string): Promise<RunSc
 	log.info(`Starting manifest validation for file: ${manifestPath}`);
 
 	const manifest = await readManifest(manifestPath);
-	const validate = await createUI5ManifestValidateFunction();
+	const manifestVersion = "latest";
+	log.info(`Using manifest version: ${manifestVersion}`);
+	const ui5ManifestSchema = await getManifestSchema(manifestVersion);
+	const validate = await createUI5ManifestValidateFunction(ui5ManifestSchema);
 	const isValid = validate(manifest);
 
 	if (isValid) {
