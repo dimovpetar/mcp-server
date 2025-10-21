@@ -11,6 +11,7 @@ import registerGetGuidelinesTool from "./tools/get_guidelines/index.js";
 import registerGetVersionInfoTool from "./tools/get_version_info/index.js";
 import registerGetIntegrationCardsGuidelinesTool from "./tools/get_integration_cards_guidelines/index.js";
 import registerCreateIntegrationCardTool from "./tools/create_integration_card/index.js";
+import registerRunManifestValidationTool from "./tools/run_manifest_validation/index.js";
 import registerGetTypescriptConversionGuidelinesTool from "./tools/get_typescript_conversion_guidelines/index.js";
 
 interface Options {
@@ -55,6 +56,8 @@ export default function (server: McpServer, context: Context, options: Options) 
 	registerGetIntegrationCardsGuidelinesTool(registerTool, context);
 
 	registerCreateIntegrationCardTool(registerTool, context);
+
+	registerRunManifestValidationTool(registerTool, context);
 
 	registerGetTypescriptConversionGuidelinesTool(registerTool, context);
 }
