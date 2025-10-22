@@ -1,14 +1,35 @@
 import {getLogger} from "@ui5/logger";
 import {fetchCdn} from "./cdnHelper.js";
 
-const log = getLogger("utils:dataStorageHelper");
+const log = getLogger("utils:ui5Manifest");
 const MAPPING_URL = "https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json";
 const LATEST_SCHEMA_URL = "https://raw.githubusercontent.com/SAP/ui5-manifest/main/schema.json";
+const schemaCache = new Map<string, Promise<object>>();
 
 async function getUI5toManifestVersionMap() {
 	const mapping = await fetchCdn(MAPPING_URL);
 
 	return mapping as Record<string, string>;
+}
+
+async function fetchSchema(manifestVersion: string) {
+	if (schemaCache.has(manifestVersion)) {
+		log.info(`Loading cached schema for manifest version: ${manifestVersion}`);
+
+		try {
+			const schema = await schemaCache.get(manifestVersion)!;
+			return schema;
+		} catch {
+			schemaCache.delete(manifestVersion);
+		}
+	}
+
+	log.info(`Fetching schema for manifest version: ${manifestVersion}`);
+	schemaCache.set(manifestVersion, fetchCdn(LATEST_SCHEMA_URL));
+	const schema = await schemaCache.get(manifestVersion)!;
+	log.info(`Fetched UI5 manifest schema from ${LATEST_SCHEMA_URL}`);
+
+	return schema;
 }
 
 export async function getLatestManifestVersion() {
@@ -26,9 +47,5 @@ export async function getManifestSchema(manifestVersion: string) {
 		throw new Error(`Only 'latest' manifest version is supported, but got '${manifestVersion}'.`);
 	}
 
-	// Fetch the UI5 manifest schema
-	const schema = await fetchCdn(LATEST_SCHEMA_URL);
-	log.info(`Fetched UI5 manifest schema from ${LATEST_SCHEMA_URL}`);
-
-	return schema;
+	return await fetchSchema(manifestVersion);
 }
