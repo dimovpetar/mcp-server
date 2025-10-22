@@ -8,6 +8,7 @@ const log = getLogger("tools:run_manifest_validation");
 
 export default function registerTool(registerTool: RegisterTool, _context: Context) {
 	registerTool("run_manifest_validation", {
+		title: "Manifest Validation",
 		description:
 			"Validates UI5 manifest file." +
 			"After making changes, you should always run the validation again " +
