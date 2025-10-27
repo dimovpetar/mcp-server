@@ -9,68 +9,79 @@ import {getManifestSchema} from "../../utils/ui5Manifest.js";
 const log = getLogger("tools:run_manifest_validation:runValidation");
 const schemaCache = new Map<string, Promise<object>>();
 
+// Configuration constants
+const AJV_SCHEMA_PATHS = {
+	draft06: "node_modules/ajv/dist/refs/json-schema-draft-06.json",
+	draft07: "node_modules/ajv/dist/refs/json-schema-draft-07.json",
+} as const;
+
 async function createUI5ManifestValidateFunction(ui5Schema: object) {
-	const ajv = new Ajv2020.default({
-		allErrors: true, // Collect all errors, not just the first one
-		strict: false, // Allow additional properties that are not in schema
-		unicodeRegExp: false,
-		loadSchema: async (uri) => {
-			// Check cache first to prevent infinite loops
-			if (schemaCache.has(uri)) {
-				log.info(`Loading cached schema: ${uri}`);
+	try {
+		const ajv = new Ajv2020.default({
+			allErrors: true, // Collect all errors, not just the first one
+			strict: false, // Allow additional properties that are not in schema
+			unicodeRegExp: false,
+			loadSchema: async (uri) => {
+				// Check cache first to prevent infinite loops
+				if (schemaCache.has(uri)) {
+					log.info(`Loading cached schema: ${uri}`);
+
+					try {
+						const schema = await schemaCache.get(uri)!;
+						return schema;
+					} catch {
+						schemaCache.delete(uri);
+					}
+				}
+
+				log.info(`Loading external schema: ${uri}`);
+				let fetchSchema: Promise<object>;
 
 				try {
-					const schema = await schemaCache.get(uri)!;
-					return schema;
-				} catch {
-					schemaCache.delete(uri);
+					if (uri.includes("adaptive-card.json")) {
+						// Special handling for Adaptive Card schema to fix unsupported "id" property
+						// According to the JSON Schema spec Draft 06 (used by Adaptive Card schema),
+						// "$id" should be used instead of "id"
+						fetchSchema = fetchCdn(uri)
+							.then((response) => {
+								if ("id" in response && typeof response.id === "string") {
+									const typedResponse = response as Record<string, unknown>;
+									typedResponse.$id = response.id;
+									delete typedResponse.id;
+								}
+								return response;
+							});
+					} else {
+						fetchSchema = fetchCdn(uri);
+					}
+
+					schemaCache.set(uri, fetchSchema);
+					return fetchSchema;
+				} catch (error) {
+					log.warn(`Failed to load external schema ${uri}:` +
+						`${error instanceof Error ? error.message : String(error)}`);
+
+					throw error;
 				}
-			}
+			},
+		});
+		const draft06MetaSchema = JSON.parse(
+			await readFile(AJV_SCHEMA_PATHS.draft06, "utf-8")
+		) as AnySchemaObject;
+		const draft07MetaSchema = JSON.parse(
+			await readFile(AJV_SCHEMA_PATHS.draft07, "utf-8")
+		) as AnySchemaObject;
 
-			log.info(`Loading external schema: ${uri}`);
-			let fetchSchema: Promise<object>;
+		ajv.addMetaSchema(draft06MetaSchema, "http://json-schema.org/draft-06/schema#");
+		ajv.addMetaSchema(draft07MetaSchema, "http://json-schema.org/draft-07/schema#");
 
-			try {
-				if (uri.includes("adaptive-card.json")) {
-					// Special handling for Adaptive Card schema to fix unsupported "id" property
-					// According to the JSON Schema spec Draft 06 (used by Adaptive Card schema),
-					// "$id" should be used instead of "id"
-					fetchSchema = fetchCdn(uri)
-						.then((response) => {
-							if ("id" in response && typeof response.id === "string") {
-								const typedResponse = response as Record<string, unknown>;
-								typedResponse.$id = response.id;
-								delete typedResponse.id;
-							}
-							return response;
-						});
-				} else {
-					fetchSchema = fetchCdn(uri);
-				}
+		const validate = await ajv.compileAsync(ui5Schema);
 
-				schemaCache.set(uri, fetchSchema);
-				return fetchSchema;
-			} catch (error) {
-				log.warn(`Failed to load external schema ${uri}:` +
-					`${error instanceof Error ? error.message : String(error)}`);
-
-				throw error;
-			}
-		},
-	});
-	const draft06MetaSchema = JSON.parse(
-		await readFile("node_modules/ajv/dist/refs/json-schema-draft-06.json", "utf-8")
-	) as AnySchemaObject;
-	const draft07MetaSchema = JSON.parse(
-		await readFile("node_modules/ajv/dist/refs/json-schema-draft-07.json", "utf-8")
-	) as AnySchemaObject;
-
-	ajv.addMetaSchema(draft06MetaSchema, "http://json-schema.org/draft-06/schema#");
-	ajv.addMetaSchema(draft07MetaSchema, "http://json-schema.org/draft-07/schema#");
-
-	const validate = await ajv.compileAsync(ui5Schema);
-
-	return validate;
+		return validate;
+	} catch (error) {
+		throw new Error(`Failed to create UI5 manifest validate function: ` +
+			`${error instanceof Error ? error.message : String(error)}`);
+	}
 }
 
 async function readManifest(path: string) {

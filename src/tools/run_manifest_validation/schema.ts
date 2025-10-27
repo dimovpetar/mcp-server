@@ -35,27 +35,6 @@ export const outputSchema = {
 				.describe("The data validated by the keyword."),
 		})
 	).describe("Array of validation error objects as returned by Ajv."),
-
-	// errors: z.array(
-	// 	z.object({
-	// 		path: z.array(
-	// 			z.any()
-	// 		).describe("An array of property keys or array offsets," +
-	// 			"indicating where inside objects or arrays the instance was found"),
-	// 		property: z.string()
-	// 			.describe("Describes the property path. Starts with instance, and is delimited with a dot (.)"),
-	// 		message: z.string()
-	// 			.describe("A human-readable message for debugging use."),
-	// 		instance: z.any()
-	// 			.describe("The instance that failed"),
-	// 		name: z.string()
-	// 			.describe("The keyword within the schema that failed."),
-	// 		argument: z.any()
-	// 			.describe("Provides information about the keyword that failed."),
-	// 		stack: z.string()
-	// 			.describe("A human-readable string representing the error."),
-	// 	}).describe("Single schema error object.")
-	// ),
 };
-export const outputSchemaObject = z.object(outputSchema);
-export type RunSchemaValidationResult = z.infer<typeof outputSchemaObject>;
+const _outputSchemaObject = z.object(outputSchema);
+export type RunSchemaValidationResult = z.infer<typeof _outputSchemaObject>;
