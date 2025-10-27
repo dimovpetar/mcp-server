@@ -32,6 +32,7 @@ The UI5 [Model Context Protocol](https://modelcontextprotocol.io/) server offers
 - `get_typescript_conversion_guidelines`: Provides guidelines for converting UI5 applications and controls from JavaScript to TypeScript.
 - `get_integration_cards_guidelines`: Provides access to UI Integration Cards development best practices.
 - `create_integration_card`: Scaffolds a new UI Integration Card.
+- `run_manifest_validation`: Validates the manifest against the UI5 Manifest schema.
 
 ## Requirements
 
