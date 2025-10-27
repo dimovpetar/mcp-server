@@ -6,6 +6,7 @@ const test = anyTest as TestFn<{
 	sinon: sinonGlobal.SinonSandbox;
 	fetchCdnStub: sinonGlobal.SinonStub;
 	getLatestManifestVersion: typeof import("../../../src/utils/ui5Manifest.js").getLatestManifestVersion;
+	getManifestSchema: typeof import("../../../src/utils/ui5Manifest.js").getManifestSchema;
 }>;
 
 test.beforeEach(async (t) => {
@@ -15,13 +16,14 @@ test.beforeEach(async (t) => {
 	t.context.fetchCdnStub = fetchCdnStub;
 
 	// Import the module with mocked dependencies
-	const {getLatestManifestVersion} = await esmock("../../../src/utils/ui5Manifest.js", {
+	const {getLatestManifestVersion, getManifestSchema} = await esmock("../../../src/utils/ui5Manifest.js", {
 		"../../../src/utils/cdnHelper.js": {
 			fetchCdn: fetchCdnStub,
 		},
 	});
 
 	t.context.getLatestManifestVersion = getLatestManifestVersion;
+	t.context.getManifestSchema = getManifestSchema;
 });
 
 test.afterEach.always((t) => {
@@ -40,6 +42,23 @@ test("getLatestManifestVersion returns correct version from CDN data", async (t)
 	const latestVersion = await getLatestManifestVersion();
 
 	t.is(latestVersion, "1.79.0");
+	t.true(fetchCdnStub.calledOnce);
+});
+
+test("getLatestManifestVersion uses cache on subsequent calls", async (t) => {
+	const {fetchCdnStub, getLatestManifestVersion} = t.context;
+	const mockData = {
+		"latest": "1.79.0",
+		"1.141": "1.79.0",
+		"1.140": "1.78.0",
+	};
+	fetchCdnStub.resolves(mockData);
+
+	const latestVersion1 = await getLatestManifestVersion();
+	const latestVersion2 = await getLatestManifestVersion();
+
+	t.is(latestVersion1, "1.79.0");
+	t.is(latestVersion2, "1.79.0");
 	t.true(fetchCdnStub.calledOnce);
 });
 
@@ -74,6 +93,66 @@ test("getLatestManifestVersion handles missing latest version", async (t) => {
 		},
 		{
 			message: "Could not determine latest manifest version.",
+		}
+	);
+	t.true(fetchCdnStub.calledOnce);
+});
+
+test("getManifestSchema throws error for unsupported versions", async (t) => {
+	const {getManifestSchema} = t.context;
+
+	await t.throwsAsync(
+		async () => {
+			await getManifestSchema("1.78.0");
+		},
+		{
+			message: "Only 'latest' manifest version is supported, but got '1.78.0'.",
+		}
+	);
+});
+
+test("getManifestSchema fetches schema for 'latest' version", async (t) => {
+	const {fetchCdnStub, getManifestSchema} = t.context;
+	const mockSchema = {
+		$schema: "http://json-schema.org/draft-07/schema#",
+		type: "object",
+	};
+	fetchCdnStub.resolves(mockSchema);
+
+	const schema = await getManifestSchema("latest");
+
+	t.deepEqual(schema, mockSchema);
+	t.true(fetchCdnStub.calledOnce);
+});
+
+test("getManifestSchema uses cache on subsequent calls", async (t) => {
+	const {fetchCdnStub, getManifestSchema} = t.context;
+	const mockSchema = {
+		$schema: "http://json-schema.org/draft-07/schema#",
+		type: "object",
+	};
+	fetchCdnStub.resolves(mockSchema);
+
+	const schema1 = await getManifestSchema("latest");
+	const schema2 = await getManifestSchema("latest");
+
+	t.deepEqual(schema1, mockSchema);
+	t.deepEqual(schema2, mockSchema);
+	t.true(fetchCdnStub.calledOnce);
+});
+
+test("getManifestSchema handles fetch errors", async (t) => {
+	const {fetchCdnStub, getManifestSchema} = t.context;
+
+	// Mock fetch error
+	fetchCdnStub.rejects(new Error("Network error"));
+
+	await t.throwsAsync(
+		async () => {
+			await getManifestSchema("latest");
+		},
+		{
+			message: "Network error",
 		}
 	);
 	t.true(fetchCdnStub.calledOnce);
