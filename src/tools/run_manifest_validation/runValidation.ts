@@ -5,11 +5,12 @@ import {readFile} from "fs/promises";
 import {getLogger} from "@ui5/logger";
 import {InvalidInputError} from "../../utils.js";
 import {getManifestSchema} from "../../utils/ui5Manifest.js";
+import {Mutex} from "async-mutex";
 
 const log = getLogger("tools:run_manifest_validation:runValidation");
-const schemaCache = new Map<string, Promise<object>>();
+const schemaCache = new Map<string, AnySchemaObject>();
+const fetchSchemaMutex = new Mutex();
 
-// Configuration constants
 const AJV_SCHEMA_PATHS = {
 	draft06: "node_modules/ajv/dist/refs/json-schema-draft-06.json",
 	draft07: "node_modules/ajv/dist/refs/json-schema-draft-07.json",
@@ -22,46 +23,35 @@ async function createUI5ManifestValidateFunction(ui5Schema: object) {
 			strict: false, // Allow additional properties that are not in schema
 			unicodeRegExp: false,
 			loadSchema: async (uri) => {
-				// Check cache first to prevent infinite loops
+				const release = await fetchSchemaMutex.acquire();
+
 				if (schemaCache.has(uri)) {
 					log.info(`Loading cached schema: ${uri}`);
-
-					try {
-						const schema = await schemaCache.get(uri)!;
-						return schema;
-					} catch {
-						schemaCache.delete(uri);
-					}
+					return schemaCache.get(uri)!;
 				}
 
-				log.info(`Loading external schema: ${uri}`);
-				let fetchSchema: Promise<object>;
-
 				try {
-					if (uri.includes("adaptive-card.json")) {
-						// Special handling for Adaptive Card schema to fix unsupported "id" property
-						// According to the JSON Schema spec Draft 06 (used by Adaptive Card schema),
-						// "$id" should be used instead of "id"
-						fetchSchema = fetchCdn(uri)
-							.then((response) => {
-								if ("id" in response && typeof response.id === "string") {
-									const typedResponse = response as Record<string, unknown>;
-									typedResponse.$id = response.id;
-									delete typedResponse.id;
-								}
-								return response;
-							});
-					} else {
-						fetchSchema = fetchCdn(uri);
+					log.info(`Loading external schema: ${uri}`);
+					const schema = await fetchCdn(uri) as AnySchemaObject;
+
+					// Special handling for Adaptive Card schema to fix unsupported "id" property
+					// According to the JSON Schema spec Draft 06 (used by Adaptive Card schema),
+					// "$id" should be used instead of "id"
+					if (uri.includes("adaptive-card.json") && typeof schema.id === "string") {
+						schema.$id = schema.id;
+						delete schema.id;
 					}
 
-					schemaCache.set(uri, fetchSchema);
-					return fetchSchema;
+					schemaCache.set(uri, schema);
+
+					return schema;
 				} catch (error) {
 					log.warn(`Failed to load external schema ${uri}:` +
 						`${error instanceof Error ? error.message : String(error)}`);
 
 					throw error;
+				} finally {
+					release();
 				}
 			},
 		});

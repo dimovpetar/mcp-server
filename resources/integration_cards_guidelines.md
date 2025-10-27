@@ -42,6 +42,7 @@
 ## 2. Validation
 - **ALWAYS** ensure that `manifest.json` file is valid JSON.
 - **ALWAYS** ensure that in `manifest.json` file the property `sap.app/type` is set to `"card"`.
+- **ALWAYS** validate the `manifest.json` against the UI5 Manifest schema. You must do it using the `run_manifest_validation` tool.
 - **ALWAYS** avoid using deprecated properties in `manifest.json` and elsewhere.
 - **NEVER** treat Integration Cards' project as UI5 project, except for cards of type "Component".
 

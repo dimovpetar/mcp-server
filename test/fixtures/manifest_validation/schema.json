@@ -1,0 +1,46 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"required": ["_version", "sap.app"],
+	"properties": {
+		"_version": {
+			"type": "string"
+		},
+		"sap.app": {
+			"type": "object",
+			"required": ["id", "type", "applicationVersion"],
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string"
+				},
+				"title": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string"
+				},
+				"applicationVersion": {
+					"type": "object",
+					"required": ["version"],
+					"properties": {
+						"version": {
+							"type": "string"
+						}
+					}
+				},
+				"dataSources": {
+					"type": "object"
+				}
+			}
+		},
+		"sap.ui": {
+			"type": "object"
+		},
+		"sap.ui5": {
+			"type": "object"
+		}
+	}
+}
