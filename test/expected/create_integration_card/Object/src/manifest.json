@@ -1,0 +1,69 @@
+{
+	"_version": "1.78.0",
+	"sap.app": {
+		"id": "sample.integration.card",
+		"type": "card",
+		"title": "Sample Integration Card",
+		"applicationVersion": {
+			"version": "1.0.0"
+		}
+	},
+	"sap.ui": {
+		"technology": "UI5",
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		}
+	},
+	"sap.card": {
+		"type": "Object",
+		"configuration": {
+			"editor": "./dt/Configuration"
+		},
+		"data": {
+			"json": {
+				"firstName": "John",
+				"lastName": "Doe",
+				"company": {
+					"name": "Some Corp",
+					"address": "123 Main St, Anytown"
+				}
+			}
+		},
+		"header": {
+			"title": "{i18n>title}",
+			"subtitle": "{i18n>subtitle}"
+		},
+		"content": {
+			"groups": [
+				{
+					"title": "Contact Details",
+					"items": [
+						{
+							"label": "First Name",
+							"value": "{firstName}"
+						},
+						{
+							"label": "Last Name",
+							"value": "{lastName}"
+						}
+					]
+				},
+				{
+					"title": "Company Details",
+					"items": [
+						{
+							"label": "Company Name",
+							"value": "{company/name}"
+						},
+						{
+							"label": "Address",
+							"value": "{company/address}"
+						}
+					]
+				}
+			]
+		}
+	}
+}

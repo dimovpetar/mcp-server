@@ -8,6 +8,7 @@
 - **ALWAYS** refer to parameters using correct syntax - `{parameters>/parameterKey/value}`.
 - **ALWAYS** perform validation of the integration card as described in [2. Validation](#2-validation).
 - **ALWAYS** show a preview of the generated card following the [4. Preview Instructions](#4-preview-instructions).
+- **ALWAYS** generate new declarative integration cards using the `create_integration_card` tool.
 
 ### 1.1 Data
 - **NEVER** modify the given data under any circumstances
@@ -49,12 +50,13 @@
 - can be found at https://ui5.sap.com/test-resources/sap/ui/integration/demokit/cardExplorer/webapp/index.html
 
 ## 4. Preview Instructions
-- To show a preview of the card, you need an html page, that contains a `ui-integration` card element that uses the card manifest.
-- **ALWAYS** search the existing card folder for preview file and instructions and use them, if available. 
+- **ALWAYS** search the existing card folder for preview instructions or scripts and use them, if available.
+  * for example, in NodeJS-based projects, search the `package.json` file for `start` or similar script. If such is available, use it
+  * also search in the `README.md` file.
+- If preview instructions are not available, you have to create an html page, that contains a `ui-integration` card element that uses the card manifest. Then serve the html page using `http` server.
 
 ## 5. Configuration Editor
 - When there is Configuration Editor, always try to make most of the integration card fields editable.
-
 
 ## 6. Analytical Cards Coding Guidelines
 - **ALWAYS** set `sap.card/content/chartType` property.

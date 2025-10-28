@@ -1,0 +1,44 @@
+"data": {
+	"json": {
+		"firstName": "John",
+		"lastName": "Doe",
+		"company": {
+			"name": "Some Corp",
+			"address": "123 Main St, Anytown"
+		}
+	}
+},
+"header": {
+	"title": "{i18n>title}",
+	"subtitle": "{i18n>subtitle}"
+},
+"content": {
+	"groups": [
+		{
+			"title": "Contact Details",
+			"items": [
+				{
+					"label": "First Name",
+					"value": "{firstName}"
+				},
+				{
+					"label": "Last Name",
+					"value": "{lastName}"
+				}
+			]
+		},
+		{
+			"title": "Company Details",
+			"items": [
+				{
+					"label": "Company Name",
+					"value": "{company/name}"
+				},
+				{
+					"label": "Address",
+					"value": "{company/address}"
+				}
+			]
+		}
+	]
+}
