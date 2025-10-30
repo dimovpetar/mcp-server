@@ -2,7 +2,7 @@ import {z} from "zod";
 
 export const inputSchema = {
 	manifestPath: z.string()
-		.describe("Path to the manifest file to validate."),
+		.describe("Absolute path to the manifest file to validate."),
 };
 
 export const outputSchema = {

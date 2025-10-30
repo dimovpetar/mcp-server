@@ -2,6 +2,7 @@ import anyTest, {TestFn} from "ava";
 import * as sinon from "sinon";
 import esmock from "esmock";
 import {readFile} from "fs/promises";
+import {InvalidInputError} from "../../../../src/utils.js";
 
 const test = anyTest as TestFn<{
 	sinon: sinon.SinonSandbox;
@@ -136,6 +137,17 @@ test("runValidation successfully validates invalid manifest", async (t) => {
 	});
 });
 
+test("runValidation throws error when manifest file path is not absolute", async (t) => {
+	const {runValidation} = t.context;
+
+	await t.throwsAsync(async () => {
+		return await runValidation("relativeManifest.json");
+	}, {
+		instanceOf: InvalidInputError,
+		message: "The manifest path must be absolute: 'relativeManifest.json'",
+	});
+});
+
 test("runValidation throws error when manifest file path is not correct", async (t) => {
 	const {runValidation, readFileStub} = t.context;
 
@@ -143,10 +155,9 @@ test("runValidation throws error when manifest file path is not correct", async 
 	readFileStub.rejects(new Error("File not found"));
 
 	await t.throwsAsync(async () => {
-		const result = await runValidation("/nonexistent/path");
-		return result;
+		return await runValidation("/nonexistent/path");
 	}, {
-		instanceOf: Error,
+		instanceOf: InvalidInputError,
 		message: /Failed to read manifest file at .+: .+/,
 	});
 });
@@ -157,10 +168,9 @@ test("runValidation throws error when manifest file content is invalid JSON", as
 	t.context.manifestFileContent = "Invalid JSON Content";
 
 	await t.throwsAsync(async () => {
-		const result = await runValidation("/path/to/manifest.json");
-		return result;
+		return await runValidation("/path/to/manifest.json");
 	}, {
-		instanceOf: Error,
+		instanceOf: InvalidInputError,
 		message: /Failed to parse manifest file at .+ as JSON: .+/,
 	});
 });
@@ -172,8 +182,7 @@ test("runValidation throws error when schema validation function cannot be compi
 	getManifestSchemaStub.resolves(null); // Simulate invalid schema
 
 	await t.throwsAsync(async () => {
-		const result = await runValidation("/path/to/manifest.json");
-		return result;
+		return await runValidation("/path/to/manifest.json");
 	}, {
 		instanceOf: Error,
 		message: /Failed to create UI5 manifest validate function: .+/,
@@ -247,8 +256,7 @@ test("runValidation throws error when external schema cannot be fetched", async 
 		.rejects(new Error("Failed to fetch external schema"));
 
 	await t.throwsAsync(async () => {
-		const result = await runValidation("/path/to/manifest.json");
-		return result;
+		return await runValidation("/path/to/manifest.json");
 	}, {
 		instanceOf: Error,
 		message: /Failed to create UI5 manifest validate function: .+/,

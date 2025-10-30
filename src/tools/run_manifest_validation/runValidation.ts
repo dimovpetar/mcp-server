@@ -7,6 +7,7 @@ import {InvalidInputError} from "../../utils.js";
 import {getManifestSchema} from "../../utils/ui5Manifest.js";
 import {Mutex} from "async-mutex";
 import {fileURLToPath} from "url";
+import {isAbsolute} from "path";
 
 const log = getLogger("tools:run_manifest_validation:runValidation");
 const schemaCache = new Map<string, AnySchemaObject>();
@@ -79,6 +80,10 @@ async function createUI5ManifestValidateFunction(ui5Schema: object) {
 async function readManifest(path: string) {
 	let content: string;
 	let json: object;
+
+	if (!isAbsolute(path)) {
+		throw new InvalidInputError(`The manifest path must be absolute: '${path}'`);
+	}
 
 	try {
 		content = await readFile(path, "utf-8");
