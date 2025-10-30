@@ -6,14 +6,15 @@ import {getLogger} from "@ui5/logger";
 import {InvalidInputError} from "../../utils.js";
 import {getManifestSchema} from "../../utils/ui5Manifest.js";
 import {Mutex} from "async-mutex";
+import {fileURLToPath} from "url";
 
 const log = getLogger("tools:run_manifest_validation:runValidation");
 const schemaCache = new Map<string, AnySchemaObject>();
 const fetchSchemaMutex = new Mutex();
 
 const AJV_SCHEMA_PATHS = {
-	draft06: "node_modules/ajv/dist/refs/json-schema-draft-06.json",
-	draft07: "node_modules/ajv/dist/refs/json-schema-draft-07.json",
+	draft06: fileURLToPath(import.meta.resolve("ajv/dist/refs/json-schema-draft-06.json")),
+	draft07: fileURLToPath(import.meta.resolve("ajv/dist/refs/json-schema-draft-07.json")),
 } as const;
 
 async function createUI5ManifestValidateFunction(ui5Schema: object) {
