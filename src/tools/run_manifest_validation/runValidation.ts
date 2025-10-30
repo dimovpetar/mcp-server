@@ -37,6 +37,7 @@ async function createUI5ManifestValidateFunction(ui5Schema: object) {
 					// Special handling for Adaptive Card schema to fix unsupported "id" property
 					// According to the JSON Schema spec Draft 06 (used by Adaptive Card schema),
 					// "$id" should be used instead of "id"
+					// See https://github.com/microsoft/AdaptiveCards/issues/9274
 					if (uri.includes("adaptive-card.json") && typeof schema.id === "string") {
 						schema.$id = schema.id;
 						delete schema.id;
