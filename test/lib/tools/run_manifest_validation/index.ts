@@ -145,3 +145,43 @@ test("run_manifest_validation tool handles errors correctly", async (t) => {
 		message: errorMessage,
 	});
 });
+
+test("run_manifest_validation tool normalizes manifest path before validation", async (t) => {
+	const {
+		registerToolCallback,
+		registerRunManifestValidationTool,
+		runValidationStub,
+	} = t.context;
+
+	// Setup runValidation to return a sample result
+	const sampleResult = {
+		valid: true,
+		issues: [],
+	};
+	runValidationStub.resolves(sampleResult);
+
+	class CustomTestContext extends TestContext {
+		async normalizePath(path: string): Promise<string> {
+			return Promise.resolve(`/normalized${path}`);
+		}
+	}
+
+	// Register the tool and capture the execute function
+	registerRunManifestValidationTool(registerToolCallback, new CustomTestContext());
+	const executeFunction = registerToolCallback.firstCall.args[2];
+
+	const mockExtra = {
+		signal: new AbortController().signal,
+		requestId: "test-request-id",
+		sendNotification: t.context.sinon.stub(),
+		sendRequest: t.context.sinon.stub(),
+	};
+
+	// Execute the tool
+	const manifestPath = "/path/to/manifest.json";
+	await executeFunction({manifestPath}, mockExtra);
+
+	// Verify that runValidation was called with the normalized path
+	t.true(runValidationStub.calledOnce);
+	t.is(runValidationStub.firstCall.args[0], "/normalized/path/to/manifest.json");
+});

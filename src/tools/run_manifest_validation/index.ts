@@ -6,7 +6,7 @@ import {RegisterTool} from "../../registerTools.js";
 
 const log = getLogger("tools:run_manifest_validation");
 
-export default function registerTool(registerTool: RegisterTool, _context: Context) {
+export default function registerTool(registerTool: RegisterTool, context: Context) {
 	registerTool("run_manifest_validation", {
 		title: "Manifest Validation",
 		description:
@@ -22,7 +22,8 @@ export default function registerTool(registerTool: RegisterTool, _context: Conte
 	}, async ({manifestPath}) => {
 		log.info(`Running manifest validation on ${manifestPath}...`);
 
-		const result = await runValidation(manifestPath);
+		const normalizedManifestPath = await context.normalizePath(manifestPath);
+		const result = await runValidation(normalizedManifestPath);
 
 		return {
 			content: [{
