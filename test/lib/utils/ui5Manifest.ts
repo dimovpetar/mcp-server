@@ -98,28 +98,38 @@ test("getLatestManifestVersion handles missing latest version", async (t) => {
 	t.true(fetchCdnStub.calledOnce);
 });
 
-test("getManifestSchema throws error for unsupported versions", async (t) => {
+test("getManifestSchema throws error for unsupported versions 1.x.x versions", async (t) => {
 	const {getManifestSchema} = t.context;
 
 	await t.throwsAsync(
 		async () => {
-			await getManifestSchema("1.78.0");
+			await getManifestSchema("1.47.0");
 		},
 		{
-			message: "Only 'latest' manifest version is supported, but got '1.78.0'.",
+			message: "Manifest version '1.47.0' is not supported. Please upgrade to a newer one.",
 		}
 	);
+
+	await t.notThrowsAsync(async () => {
+		await getManifestSchema("1.48.0");
+	});
+
+	await t.notThrowsAsync(async () => {
+		await getManifestSchema("2.0.0");
+	});
 });
 
-test("getManifestSchema fetches schema for 'latest' version", async (t) => {
+test("getManifestSchema fetches schema for specific version", async (t) => {
 	const {fetchCdnStub, getManifestSchema} = t.context;
 	const mockSchema = {
 		$schema: "http://json-schema.org/draft-07/schema#",
 		type: "object",
 	};
-	fetchCdnStub.resolves(mockSchema);
 
-	const schema = await getManifestSchema("latest");
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+		.resolves(mockSchema);
+
+	const schema = await getManifestSchema("1.48.0");
 
 	t.deepEqual(schema, mockSchema);
 	t.true(fetchCdnStub.calledOnce);
@@ -131,10 +141,12 @@ test("getManifestSchema uses cache on subsequent calls", async (t) => {
 		$schema: "http://json-schema.org/draft-07/schema#",
 		type: "object",
 	};
-	fetchCdnStub.resolves(mockSchema);
 
-	const schema1 = await getManifestSchema("latest");
-	const schema2 = await getManifestSchema("latest");
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+		.resolves(mockSchema);
+
+	const schema1 = await getManifestSchema("1.48.0");
+	const schema2 = await getManifestSchema("1.48.0");
 
 	t.deepEqual(schema1, mockSchema);
 	t.deepEqual(schema2, mockSchema);
@@ -145,15 +157,44 @@ test("getManifestSchema handles fetch errors", async (t) => {
 	const {fetchCdnStub, getManifestSchema} = t.context;
 
 	// Mock fetch error
-	fetchCdnStub.rejects(new Error("Network error"));
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+		.rejects(new Error("Mapping.json error"));
+
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+		.rejects(new Error("Network error"));
 
 	await t.throwsAsync(
 		async () => {
-			await getManifestSchema("latest");
+			await getManifestSchema("1.48.0");
 		},
 		{
-			message: "Network error",
+			message: "Failed to fetch schema for manifest version '1.48.0': Network error",
 		}
 	);
-	t.true(fetchCdnStub.calledOnce);
+	t.true(fetchCdnStub.calledTwice);
+});
+
+test("getManifestSchema handles fetch errors and gives more details about supported versions", async (t) => {
+	const {fetchCdnStub, getManifestSchema} = t.context;
+
+	// Mock fetch error
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+		.resolves({
+			"1.49.0": "1.49.0",
+			"1.50.0": "1.50.0",
+		});
+
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+		.rejects(new Error("Network error"));
+
+	await t.throwsAsync(
+		async () => {
+			await getManifestSchema("1.48.0");
+		},
+		{
+			message: "Failed to fetch schema for manifest version '1.48.0': " +
+				"This version is not supported. Supported versions are: 1.49.0, 1.50.0. Network error",
+		}
+	);
+	t.true(fetchCdnStub.calledTwice);
 });

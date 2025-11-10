@@ -59,6 +59,7 @@ test("runValidation successfully validates valid manifest", async (t) => {
 
 	// Stub the readFile function to return a valid manifest
 	const validManifest = {
+		"_version": "1.0.0",
 		"sap.app": {
 			id: "my.app.id",
 			type: "application",
@@ -69,6 +70,7 @@ test("runValidation successfully validates valid manifest", async (t) => {
 	getManifestSchemaStub.resolves({
 		type: "object",
 		properties: {
+			"_version": {type: "string"},
 			"sap.app": {
 				type: "object",
 				properties: {
@@ -79,6 +81,7 @@ test("runValidation successfully validates valid manifest", async (t) => {
 			},
 		},
 		required: ["sap.app"],
+		additionalProperties: false,
 	});
 
 	const result = await runValidation("/path/to/manifest.json");
@@ -94,6 +97,7 @@ test("runValidation successfully validates invalid manifest", async (t) => {
 
 	// Stub the readFile function to return an invalid manifest
 	const invalidManifest = {
+		"_version": "1.0.0",
 		"sap.app": {
 			id: "my.app.id",
 			// Missing required field "type"
@@ -104,6 +108,7 @@ test("runValidation successfully validates invalid manifest", async (t) => {
 	getManifestSchemaStub.resolves({
 		type: "object",
 		properties: {
+			"_version": {type: "string"},
 			"sap.app": {
 				type: "object",
 				properties: {
@@ -178,7 +183,9 @@ test("runValidation throws error when manifest file content is invalid JSON", as
 test("runValidation throws error when schema validation function cannot be compiled", async (t) => {
 	const {runValidation, getManifestSchemaStub} = t.context;
 
-	t.context.manifestFileContent = JSON.stringify({});
+	t.context.manifestFileContent = JSON.stringify({
+		_version: "1.0.0",
+	});
 	getManifestSchemaStub.resolves(null); // Simulate invalid schema
 
 	await t.throwsAsync(async () => {
@@ -193,6 +200,7 @@ test("runValidation successfully validates valid manifest against external schem
 	const {runValidation, getManifestSchemaStub, fetchCdnStub} = t.context;
 
 	t.context.manifestFileContent = JSON.stringify({
+		"_version": "1.0.0",
 		"sap.app": {
 			id: "my.app.id",
 			type: "application",
@@ -203,11 +211,13 @@ test("runValidation successfully validates valid manifest against external schem
 	getManifestSchemaStub.resolves({
 		type: "object",
 		properties: {
+			"_version": {type: "string"},
 			"sap.app": {
 				$ref: "externalSchema.json",
 			},
 		},
 		required: ["sap.app"],
+		additionalProperties: false,
 	});
 
 	// Stub the readFile function to return the external schema when requested
@@ -234,6 +244,7 @@ test("runValidation throws error when external schema cannot be fetched", async 
 	const {runValidation, getManifestSchemaStub, fetchCdnStub} = t.context;
 
 	t.context.manifestFileContent = JSON.stringify({
+		"_version": "1.0.0",
 		"sap.app": {
 			id: "my.app.id",
 			type: "application",
@@ -244,11 +255,13 @@ test("runValidation throws error when external schema cannot be fetched", async 
 	getManifestSchemaStub.resolves({
 		type: "object",
 		properties: {
+			"_version": {type: "string"},
 			"sap.app": {
 				$ref: "externalSchema.json",
 			},
 		},
 		required: ["sap.app"],
+		additionalProperties: false,
 	});
 
 	// Stub the fetchCdn function to throw an error when fetching the external schema

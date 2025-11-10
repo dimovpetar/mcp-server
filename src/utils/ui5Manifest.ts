@@ -1,16 +1,20 @@
 import {getLogger} from "@ui5/logger";
 import {fetchCdn} from "./cdnHelper.js";
 import {Mutex} from "async-mutex";
+import semver from "semver";
 
 const log = getLogger("utils:ui5Manifest");
 
-const LATEST_SCHEMA_URL = "https://raw.githubusercontent.com/SAP/ui5-manifest/main/schema.json";
 const schemaCache = new Map<string, object>();
 const fetchSchemaMutex = new Mutex();
 
 let UI5ToManifestVersionMapping: Record<string, string> | null = null;
 const MAPPING_URL = "https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json";
 const ui5ToManifestVersionMappingMutex = new Mutex();
+
+function getSchemaURL(manifestVersion: string) {
+	return `https://raw.githubusercontent.com/SAP/ui5-manifest/v${manifestVersion}/schema.json`;
+}
 
 async function getUI5toManifestVersionMapping() {
 	const release = await ui5ToManifestVersionMappingMutex.acquire();
@@ -43,8 +47,9 @@ async function fetchSchema(manifestVersion: string) {
 		}
 
 		log.info(`Fetching schema for manifest version: ${manifestVersion}`);
-		const schema = await fetchCdn(LATEST_SCHEMA_URL);
-		log.info(`Fetched UI5 manifest schema from ${LATEST_SCHEMA_URL}`);
+		const schemaURL = getSchemaURL(manifestVersion);
+		const schema = await fetchCdn(schemaURL);
+		log.info(`Fetched UI5 manifest schema from ${schemaURL}`);
 
 		schemaCache.set(manifestVersion, schema);
 
@@ -54,6 +59,74 @@ async function fetchSchema(manifestVersion: string) {
 	}
 }
 
+/**
+ * Get the manifest schema for a specific manifest version.
+ * @param manifestVersion The manifest version
+ * @returns The manifest schema
+ * @throws Error if the manifest version is unsupported
+ */
+export async function getManifestSchema(manifestVersion: string) {
+	if (semver.lt(manifestVersion, "1.48.0")) {
+		throw new Error(
+			`Manifest version '${manifestVersion}' is not supported. Please upgrade to a newer one.`
+		);
+	}
+
+	try {
+		return await fetchSchema(manifestVersion);
+	} catch (error) {
+		let supportedVersions;
+
+		try {
+			const versionMap = await getUI5toManifestVersionMapping();
+			supportedVersions = Object.values(versionMap);
+		} catch (error) {
+			log.warn(`Failed to fetch UI5 to manifest version mapping: ` +
+				`${error instanceof Error ? error.message : String(error)}`);
+		};
+
+		// try to hint which versions are supported
+		if (supportedVersions && !supportedVersions.includes(manifestVersion)) {
+			throw new Error(
+				`Failed to fetch schema for manifest version '${manifestVersion}': ` +
+				`This version is not supported. ` +
+				`Supported versions are: ${supportedVersions.join(", ")}. ` +
+				`${error instanceof Error ? error.message : String(error)}`
+			);
+		}
+
+		throw new Error(
+			`Failed to fetch schema for manifest version '${manifestVersion}': ` +
+			`${error instanceof Error ? error.message : String(error)}`
+		);
+	}
+}
+
+/**
+ * Get the manifest version from the manifest object.
+ * @param manifest The manifest object
+ * @returns The manifest version
+ * @throws Error if the manifest version is missing or invalid
+ */
+export function getManifestVersion(manifest: object) {
+	if (!("_version" in manifest)) {
+		throw new Error("Manifest does not contain a '_version' property.");
+	}
+
+	if (typeof manifest._version !== "string") {
+		throw new Error("Manifest '_version' property is not a string.");
+	}
+
+	if (!semver.valid(manifest._version)) {
+		throw new Error("Manifest '_version' property is not a valid semantic version.");
+	}
+
+	return manifest._version;
+}
+
+/**
+ * @returns The latest manifest version
+ */
 export async function getLatestManifestVersion() {
 	const versionMap = await getUI5toManifestVersionMapping();
 
@@ -62,12 +135,4 @@ export async function getLatestManifestVersion() {
 	}
 
 	return versionMap.latest;
-}
-
-export async function getManifestSchema(manifestVersion: string) {
-	if (manifestVersion !== "latest") {
-		throw new Error(`Only 'latest' manifest version is supported, but got '${manifestVersion}'.`);
-	}
-
-	return await fetchSchema(manifestVersion);
 }
