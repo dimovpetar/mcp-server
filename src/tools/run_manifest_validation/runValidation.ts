@@ -27,12 +27,12 @@ async function createUI5ManifestValidateFunction(ui5Schema: object) {
 			loadSchema: async (uri) => {
 				const release = await fetchSchemaMutex.acquire();
 
-				if (schemaCache.has(uri)) {
-					log.info(`Loading cached schema: ${uri}`);
-					return schemaCache.get(uri)!;
-				}
-
 				try {
+					if (schemaCache.has(uri)) {
+						log.info(`Loading cached schema: ${uri}`);
+						return schemaCache.get(uri)!;
+					}
+
 					log.info(`Loading external schema: ${uri}`);
 					const schema = await fetchCdn(uri) as AnySchemaObject;
 
