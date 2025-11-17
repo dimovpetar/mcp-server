@@ -41,10 +41,10 @@ test("runValidation successfully validates valid manifest", async (t) => {
 
 	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
 		.resolves({
-			"1.59.0": "1.59.0",
+			"1.79.0": "1.79.0",
 		});
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.59.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.79.0/schema.json")
 		.resolves(schemaFixture);
 
 	const result = await runValidation(path.join(fixturesPath, "valid-manifest.json"));
@@ -60,10 +60,10 @@ test("runValidation successfully validates valid manifest after first attempt en
 
 	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
 		.resolves({
-			"1.59.0": "1.59.0",
+			"1.79.0": "1.79.0",
 		});
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.59.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.79.0/schema.json")
 		.resolves(schemaFixture);
 
 	await t.throwsAsync(async () => {
@@ -86,10 +86,10 @@ test("runValidation successfully validates valid manifest after first attempt en
 
 		fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
 			.resolves({
-				"1.59.0": "1.59.0",
+				"1.79.0": "1.79.0",
 			});
 
-		fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.59.0/schema.json")
+		fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.79.0/schema.json")
 			.onFirstCall()
 			.rejects(new Error("Failed to fetch schema"))
 			.onSecondCall()
@@ -98,7 +98,8 @@ test("runValidation successfully validates valid manifest after first attempt en
 		await t.throwsAsync(async () => {
 			await runValidation(path.join(fixturesPath, "valid-manifest.json"));
 		}, {
-			message: "Failed to fetch schema for manifest version '1.59.0': Failed to fetch schema",
+			message: "Failed to fetch schema for manifest version '1.79.0': Failed to fetch schema" +
+				"\nSupported versions are: 1.79.0.",
 		});
 
 		const result = await runValidation(path.join(fixturesPath, "valid-manifest.json"));

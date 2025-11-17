@@ -59,15 +59,33 @@ async function fetchSchema(manifestVersion: string) {
 	}
 }
 
+async function failWithSupportedVersionsHint(errorMessage: string): Promise<never> {
+	let supportedVersions;
+
+	try {
+		const versionMap = await getUI5toManifestVersionMapping();
+		supportedVersions = Object.values(versionMap).filter((version) => semver.gte(version, "1.68.0"));
+	} catch (_) {
+		supportedVersions = null;
+	};
+
+	throw new Error(
+		errorMessage +
+		(supportedVersions ?
+			`\nSupported versions are: ${supportedVersions.join(", ")}.` :
+			"")
+	);
+}
+
 /**
  * Get the manifest schema for a specific manifest version.
  * @param manifestVersion The manifest version
  * @returns The manifest schema
  * @throws Error if the manifest version is unsupported
  */
-export async function getManifestSchema(manifestVersion: string) {
-	if (semver.lt(manifestVersion, "1.48.0")) {
-		throw new Error(
+export async function getManifestSchema(manifestVersion: string): Promise<object> {
+	if (semver.lt(manifestVersion, "1.68.0")) {
+		return failWithSupportedVersionsHint(
 			`Manifest version '${manifestVersion}' is not supported. Please upgrade to a newer one.`
 		);
 	}
@@ -75,27 +93,7 @@ export async function getManifestSchema(manifestVersion: string) {
 	try {
 		return await fetchSchema(manifestVersion);
 	} catch (error) {
-		let supportedVersions;
-
-		try {
-			const versionMap = await getUI5toManifestVersionMapping();
-			supportedVersions = Object.values(versionMap);
-		} catch (error) {
-			log.warn(`Failed to fetch UI5 to manifest version mapping: ` +
-				`${error instanceof Error ? error.message : String(error)}`);
-		};
-
-		// try to hint which versions are supported
-		if (supportedVersions && !supportedVersions.includes(manifestVersion)) {
-			throw new Error(
-				`Failed to fetch schema for manifest version '${manifestVersion}': ` +
-				`This version is not supported. ` +
-				`Supported versions are: ${supportedVersions.join(", ")}. ` +
-				`${error instanceof Error ? error.message : String(error)}`
-			);
-		}
-
-		throw new Error(
+		return failWithSupportedVersionsHint(
 			`Failed to fetch schema for manifest version '${manifestVersion}': ` +
 			`${error instanceof Error ? error.message : String(error)}`
 		);

@@ -99,19 +99,37 @@ test("getLatestManifestVersion handles missing latest version", async (t) => {
 });
 
 test("getManifestSchema throws error for unsupported versions 1.x.x versions", async (t) => {
-	const {getManifestSchema} = t.context;
+	const {getManifestSchema, fetchCdnStub} = t.context;
 
 	await t.throwsAsync(
 		async () => {
-			await getManifestSchema("1.47.0");
+			await getManifestSchema("1.67.0");
 		},
 		{
-			message: "Manifest version '1.47.0' is not supported. Please upgrade to a newer one.",
+			message: "Manifest version '1.67.0' is not supported. Please upgrade to a newer one.",
+		}
+	);
+
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+		.resolves({
+			"1.55.0": "1.55.0",
+			"1.67.0": "1.67.0",
+			"1.68.0": "1.68.0",
+			"1.69.0": "1.69.0",
+		});
+
+	await t.throwsAsync(
+		async () => {
+			await getManifestSchema("1.45.0");
+		},
+		{
+			message: "Manifest version '1.45.0' is not supported. Please upgrade to a newer one." +
+				"\nSupported versions are: 1.68.0, 1.69.0.",
 		}
 	);
 
 	await t.notThrowsAsync(async () => {
-		await getManifestSchema("1.48.0");
+		await getManifestSchema("1.68.0");
 	});
 
 	await t.notThrowsAsync(async () => {
@@ -122,14 +140,14 @@ test("getManifestSchema throws error for unsupported versions 1.x.x versions", a
 test("getManifestSchema fetches schema for specific version", async (t) => {
 	const {fetchCdnStub, getManifestSchema} = t.context;
 	const mockSchema = {
-		$schema: "http://json-schema.org/draft-07/schema#",
+		$schema: "https://json-schema.org/draft/2020-12/schema",
 		type: "object",
 	};
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.68.0/schema.json")
 		.resolves(mockSchema);
 
-	const schema = await getManifestSchema("1.48.0");
+	const schema = await getManifestSchema("1.68.0");
 
 	t.deepEqual(schema, mockSchema);
 	t.true(fetchCdnStub.calledOnce);
@@ -138,15 +156,15 @@ test("getManifestSchema fetches schema for specific version", async (t) => {
 test("getManifestSchema uses cache on subsequent calls", async (t) => {
 	const {fetchCdnStub, getManifestSchema} = t.context;
 	const mockSchema = {
-		$schema: "http://json-schema.org/draft-07/schema#",
+		$schema: "https://json-schema.org/draft/2020-12/schema",
 		type: "object",
 	};
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.68.0/schema.json")
 		.resolves(mockSchema);
 
-	const schema1 = await getManifestSchema("1.48.0");
-	const schema2 = await getManifestSchema("1.48.0");
+	const schema1 = await getManifestSchema("1.68.0");
+	const schema2 = await getManifestSchema("1.68.0");
 
 	t.deepEqual(schema1, mockSchema);
 	t.deepEqual(schema2, mockSchema);
@@ -160,15 +178,15 @@ test("getManifestSchema handles fetch errors", async (t) => {
 	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
 		.rejects(new Error("Mapping.json error"));
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.68.0/schema.json")
 		.rejects(new Error("Network error"));
 
 	await t.throwsAsync(
 		async () => {
-			await getManifestSchema("1.48.0");
+			await getManifestSchema("1.68.0");
 		},
 		{
-			message: "Failed to fetch schema for manifest version '1.48.0': Network error",
+			message: "Failed to fetch schema for manifest version '1.68.0': Network error",
 		}
 	);
 	t.true(fetchCdnStub.calledTwice);
@@ -180,20 +198,20 @@ test("getManifestSchema handles fetch errors and gives more details about suppor
 	// Mock fetch error
 	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
 		.resolves({
-			"1.49.0": "1.49.0",
-			"1.50.0": "1.50.0",
+			"1.70.0": "1.70.0",
+			"1.71.0": "1.71.0",
 		});
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.48.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.69.0/schema.json")
 		.rejects(new Error("Network error"));
 
 	await t.throwsAsync(
 		async () => {
-			await getManifestSchema("1.48.0");
+			await getManifestSchema("1.69.0");
 		},
 		{
-			message: "Failed to fetch schema for manifest version '1.48.0': " +
-				"This version is not supported. Supported versions are: 1.49.0, 1.50.0. Network error",
+			message: "Failed to fetch schema for manifest version '1.69.0': Network error" +
+				"\nSupported versions are: 1.70.0, 1.71.0.",
 		}
 	);
 	t.true(fetchCdnStub.calledTwice);
