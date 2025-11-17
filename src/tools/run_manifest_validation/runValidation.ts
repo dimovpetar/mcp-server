@@ -1,6 +1,7 @@
 import {fetchCdn} from "../../utils/cdnHelper.js";
 import {RunSchemaValidationResult} from "./schema.js";
 import Ajv2020, {AnySchemaObject} from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
 import {readFile} from "fs/promises";
 import {getLogger} from "@ui5/logger";
 import {InvalidInputError} from "../../utils.js";
@@ -58,6 +59,9 @@ async function createUI5ManifestValidateFunction(ui5Schema: object) {
 				}
 			},
 		});
+
+		addFormats.default(ajv);
+
 		const draft06MetaSchema = JSON.parse(
 			await readFile(AJV_SCHEMA_PATHS.draft06, "utf-8")
 		) as AnySchemaObject;
