@@ -110,7 +110,7 @@ export default async function runValidation(manifestPath: string): Promise<RunSc
 	log.info(`Starting manifest validation for file: ${manifestPath}`);
 
 	const manifest = await readManifest(manifestPath);
-	const manifestVersion = getManifestVersion(manifest);
+	const manifestVersion = await getManifestVersion(manifest);
 	log.info(`Using manifest version: ${manifestVersion}`);
 	const ui5ManifestSchema = await getManifestSchema(manifestVersion);
 	const validate = await createUI5ManifestValidateFunction(ui5ManifestSchema);

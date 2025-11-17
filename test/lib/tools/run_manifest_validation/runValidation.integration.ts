@@ -69,7 +69,8 @@ test("runValidation successfully validates valid manifest after first attempt en
 	await t.throwsAsync(async () => {
 		await runValidation(path.join(fixturesPath, "missing-version-manifest.json"));
 	}, {
-		message: "Manifest does not contain a '_version' property.",
+		message: "Manifest does not contain a '_version' property." +
+			"\nSupported versions are: 1.79.0.",
 	});
 
 	const result = await runValidation(path.join(fixturesPath, "valid-manifest.json"));

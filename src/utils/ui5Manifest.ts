@@ -106,17 +106,17 @@ export async function getManifestSchema(manifestVersion: string): Promise<object
  * @returns The manifest version
  * @throws Error if the manifest version is missing or invalid
  */
-export function getManifestVersion(manifest: object) {
+export async function getManifestVersion(manifest: object): Promise<string> {
 	if (!("_version" in manifest)) {
-		throw new Error("Manifest does not contain a '_version' property.");
+		return failWithSupportedVersionsHint("Manifest does not contain a '_version' property.");
 	}
 
 	if (typeof manifest._version !== "string") {
-		throw new Error("Manifest '_version' property is not a string.");
+		return failWithSupportedVersionsHint("Manifest '_version' property is not a string.");
 	}
 
 	if (!semver.valid(manifest._version)) {
-		throw new Error("Manifest '_version' property is not a valid semantic version.");
+		return failWithSupportedVersionsHint("Manifest '_version' property is not a valid semantic version.");
 	}
 
 	return manifest._version;
