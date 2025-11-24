@@ -69,6 +69,9 @@ async function createUI5ManifestValidateFunction(ui5Schema: object) {
 			await readFile(AJV_SCHEMA_PATHS.draft07, "utf-8")
 		) as AnySchemaObject;
 
+		// Add meta-schemas for draft-06 and draft-07.
+		// These are required to support schemas that reference these drafts,
+		// for example the Adaptive Card schema and some sap.bpa.task properties.
 		ajv.addMetaSchema(draft06MetaSchema, "http://json-schema.org/draft-06/schema#");
 		ajv.addMetaSchema(draft07MetaSchema, "http://json-schema.org/draft-07/schema#");
 
