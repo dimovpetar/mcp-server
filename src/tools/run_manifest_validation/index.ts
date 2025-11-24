@@ -10,7 +10,7 @@ export default function registerTool(registerTool: RegisterTool, context: Contex
 	registerTool("run_manifest_validation", {
 		title: "Manifest Validation",
 		description:
-			"Validates UI5 manifest file." +
+			"Validates UI5 manifest file. " +
 			"After making changes, you should always run the validation again " +
 			"to verify that no new problems have been introduced.",
 		annotations: {

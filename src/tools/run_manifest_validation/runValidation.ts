@@ -22,10 +22,14 @@ const AJV_SCHEMA_PATHS = {
 async function createUI5ManifestValidateFunction(ui5Schema: object) {
 	try {
 		const ajv = new Ajv2020.default({
-			allErrors: true, // Collect all errors, not just the first one
-			strict: false, // Allow additional properties that are not in schema
-			unicodeRegExp: false, // Don't use Unicode-aware regular expressions,
+			// Collect all errors, not just the first one
+			allErrors: true,
+			// Allow additional properties that are not in schema such as "i18n",
+			// otherwise compilation fails
+			strict: false,
+			// Don't use Unicode-aware regular expressions,
 			// otherwise compilation fails with "Invalid escape" errors
+			unicodeRegExp: false,
 			loadSchema: async (uri) => {
 				const release = await fetchSchemaMutex.acquire();
 
