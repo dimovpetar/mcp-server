@@ -12,6 +12,9 @@ let UI5ToManifestVersionMapping: Record<string, string> | null = null;
 const MAPPING_URL = "https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json";
 const ui5ToManifestVersionMappingMutex = new Mutex();
 
+// Manifests prior to 1.68.0 use older meta-schema, which is not supported by the current implementation
+const LOWEST_SUPPORTED_MANIFEST_VERSION = "1.68.0";
+
 function getSchemaURL(manifestVersion: string) {
 	return `https://raw.githubusercontent.com/SAP/ui5-manifest/v${manifestVersion}/schema.json`;
 }
@@ -64,7 +67,9 @@ async function failWithSupportedVersionsHint(errorMessage: string): Promise<neve
 
 	try {
 		const versionMap = await getUI5toManifestVersionMapping();
-		supportedVersions = Object.values(versionMap).filter((version) => semver.gte(version, "1.68.0"));
+		supportedVersions = Object.values(versionMap).filter(
+			(version) => semver.gte(version, LOWEST_SUPPORTED_MANIFEST_VERSION)
+		);
 	} catch (_) {
 		supportedVersions = null;
 	};
@@ -84,7 +89,7 @@ async function failWithSupportedVersionsHint(errorMessage: string): Promise<neve
  * @throws Error if the manifest version is unsupported
  */
 export async function getManifestSchema(manifestVersion: string): Promise<object> {
-	if (semver.lt(manifestVersion, "1.68.0")) {
+	if (semver.lt(manifestVersion, LOWEST_SUPPORTED_MANIFEST_VERSION)) {
 		return failWithSupportedVersionsHint(
 			`Manifest version '${manifestVersion}' is not supported. Please upgrade to a newer one.`
 		);
