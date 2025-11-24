@@ -24,7 +24,8 @@ async function createUI5ManifestValidateFunction(ui5Schema: object) {
 		const ajv = new Ajv2020.default({
 			allErrors: true, // Collect all errors, not just the first one
 			strict: false, // Allow additional properties that are not in schema
-			unicodeRegExp: false,
+			unicodeRegExp: false, // Don't use Unicode-aware regular expressions,
+			// otherwise compilation fails with "Invalid escape" errors
 			loadSchema: async (uri) => {
 				const release = await fetchSchemaMutex.acquire();
 
