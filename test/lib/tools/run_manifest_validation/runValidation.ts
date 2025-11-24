@@ -275,3 +275,94 @@ test("runValidation throws error when external schema cannot be fetched", async 
 		message: /Failed to create UI5 manifest validate function: .+/,
 	});
 });
+
+test("runValidation uses cache on subsequent calls for external schemas", async (t) => {
+	const {runValidation, getManifestSchemaStub, fetchCdnStub} = t.context;
+
+	t.context.manifestFileContent = JSON.stringify({
+		"_version": "1.0.0",
+		"sap.app": {
+			id: "my.app.id",
+			type: "application",
+		},
+	});
+
+	// Schema that references an external schema
+	getManifestSchemaStub.resolves({
+		type: "object",
+		properties: {
+			"_version": {type: "string"},
+			"sap.app": {
+				$ref: "externalSchema.json",
+			},
+		},
+		required: ["sap.app"],
+		additionalProperties: false,
+	});
+
+	// Stub the fetchCdn function to return the external schema when requested
+	const externalSchema = {
+		type: "object",
+		properties: {
+			id: {type: "string"},
+			type: {type: "string"},
+		},
+		required: ["id", "type"],
+	};
+	fetchCdnStub.withArgs("externalSchema.json")
+		.resolves(externalSchema);
+
+	const result1 = await runValidation("/path/to/manifest.json");
+	const result2 = await runValidation("/path/to/manifest.json");
+
+	t.deepEqual(result1, {
+		isValid: true,
+		errors: [],
+	});
+	t.deepEqual(result2, {
+		isValid: true,
+		errors: [],
+	});
+	t.true(fetchCdnStub.calledOnce); // External schema fetched only once
+});
+
+test("runValidation patches external adaptive-card.json schema", async (t) => {
+	const {runValidation, getManifestSchemaStub, fetchCdnStub} = t.context;
+
+	t.context.manifestFileContent = JSON.stringify({
+		_version: "1.0.0",
+		adaptiveCards: {
+			type: "AdaptiveCard",
+		},
+	});
+
+	// Schema that references the adaptive-card.json schema
+	getManifestSchemaStub.resolves({
+		type: "object",
+		properties: {
+			_version: {type: "string"},
+			adaptiveCards: {
+				$ref: "https://adaptivecards.io/schemas/adaptive-card.json",
+			},
+		},
+	});
+
+	// Stub the fetchCdn function to return the adaptive-card.json schema when requested
+	const adaptiveCardSchema = {
+		type: "object",
+		id: "https://adaptivecards.io/schemas/adaptive-card.json", // Note the "id" property
+		properties: {
+			type: {type: "string"},
+		},
+		required: ["type"],
+	};
+	fetchCdnStub.withArgs("https://adaptivecards.io/schemas/adaptive-card.json")
+		.resolves(adaptiveCardSchema);
+
+	const result = await runValidation("/path/to/manifest.json");
+
+	t.deepEqual(result, {
+		isValid: true,
+		errors: [],
+	});
+});
