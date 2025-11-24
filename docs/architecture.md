@@ -647,6 +647,14 @@ If the data passed through the tool-parameters can trigger actions other than th
 * [tsx](https://github.com/privatenumber/tsx) is used to run the TypeScript code directly in Node.js during development, without a separate compilation step.
 * [ava](https://github.com/avajs/ava/) is used for testing
 
+## Distribution
+
+The UI5 MCP server is published to the [official npm registry](https://www.npmjs.com/), making it easily accessible for Node.js-based development environments and MCP hosts that support npm package installation.
+
+The [MCP registry](https://registry.modelcontextprotocol.io/) holds a reference to the npm registry package. The MCP specification owners provide this registry, which serves as the primary source for other MCP registries to retrieve their information. This approach eliminates the need to publish to multiple registries individually. It ensures broad accessibility across the MCP ecosystem.
+
+For more information about the MCP registry, see the [registry repository](https://github.com/modelcontextprotocol/registry).
+
 ## Technical Debts
 
 * `get_api_reference`: Custom implementation for handling the API reference files
