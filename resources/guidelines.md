@@ -44,7 +44,11 @@
     ```
   - Find more information on the UI5 documentation page "Declarative API for Initial Components"
 - **ALWAYS** use data binding in views to connect UI controls to data or i18n models.
-  - When binding data from OData services, **NEVER** use custom formatters for standard data types (e.g., dates, numbers, currencies). The built-in types handle these cases automatically.
+- **ALWAYS** prefer built-in data types with format options for formatting in data binding:
+  - Use OData types from the `sap.ui.model.odata.type` namespace for example `sap.ui.model.odata.type.Decimal`, `sap.ui.model.odata.type.String`, `sap.ui.model.odata.type.DateTime`). These work with all model types, not just OData models.
+  - Use standard simple types from `sap.ui.model.type` namespace only when no equivalent OData type exists (e.g., `sap.ui.model.type.DateInterval`, `sap.ui.model.type.FileSize`).
+  - Write **custom formatter functions** only for unique business logic that cannot be handled by any built-in data type with format options.
+  - Example: For number formatting with a thousands separator, prefer `sap.ui.model.odata.type.Decimal` with `formatOptions: {groupingEnabled: true}` over `sap.ui.model.type.Integer` or even a custom formatter function.
 - When making changes to `*.properties` files, **ALWAYS** apply the changes to all relevant locales. This ensures consistency across different language versions of the application.
   - **Example:** If you add a new key to `i18n.properties`, also add it to existing translation files like e.g `i18n_en.properties`, `i18n_de.properties`, etc.
 - **NEVER** use inline script in HTML
