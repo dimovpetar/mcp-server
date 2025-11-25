@@ -74,7 +74,7 @@ test("registerRunManifestValidationTool registers the tool with correct paramete
 	t.true(toolConfig?.title?.includes("Manifest Validation"));
 	t.true(toolConfig?.description?.includes("Validates UI5 manifest file"));
 	t.is(toolConfig?.annotations?.title, "Manifest Validation");
-	t.false(toolConfig?.annotations?.readOnlyHint);
+	t.true(toolConfig?.annotations?.readOnlyHint);
 });
 
 test("run_manifest_validation tool returns validation result on success", async (t) => {

@@ -15,7 +15,7 @@ export default function registerTool(registerTool: RegisterTool, context: Contex
 			"to verify that no new problems have been introduced.",
 		annotations: {
 			title: "Manifest Validation",
-			readOnlyHint: false,
+			readOnlyHint: true,
 		},
 		inputSchema,
 		outputSchema,
