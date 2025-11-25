@@ -99,8 +99,7 @@ test("runValidation successfully validates invalid manifest", async (t) => {
 	const invalidManifest = {
 		"_version": "1.0.0",
 		"sap.app": {
-			id: "my.app.id",
-			// Missing required field "type"
+			Bad: "value",
 		},
 	};
 	t.context.manifestFileContent = JSON.stringify(invalidManifest);
@@ -108,18 +107,13 @@ test("runValidation successfully validates invalid manifest", async (t) => {
 	getManifestSchemaStub.resolves({
 		type: "object",
 		properties: {
-			"_version": {type: "string"},
 			"sap.app": {
 				type: "object",
-				properties: {
-					id: {type: "string"},
-					type: {type: "string"},
+				propertyNames: {
+					pattern: "^[a-z]+$", // Enforce lowercase property names
 				},
-				required: ["id", "type"],
 			},
 		},
-		required: ["sap.app"],
-		additionalProperties: false,
 	});
 
 	const result = await runValidation("/path/to/manifest.json");
@@ -128,15 +122,20 @@ test("runValidation successfully validates invalid manifest", async (t) => {
 		isValid: false,
 		errors: [
 			{
-				params: {missingProperty: "type"},
-				keyword: "required",
+				params: {pattern: "^[a-z]+$"},
+				keyword: "pattern",
 				instancePath: "/sap.app",
-				schemaPath: "#/properties/sap.app/required",
-				message: "must have required property 'type'",
+				schemaPath: "#/properties/sap.app/propertyNames/pattern",
+				message: "must match pattern \"^[a-z]+$\"",
+				propertyName: "Bad",
+			},
+			{
+				params: {propertyName: "Bad"},
+				keyword: "propertyNames",
+				instancePath: "/sap.app",
+				schemaPath: "#/properties/sap.app/propertyNames",
+				message: "property name must be valid",
 				propertyName: undefined,
-				schema: undefined,
-				parentSchema: undefined,
-				data: undefined,
 			},
 		],
 	});

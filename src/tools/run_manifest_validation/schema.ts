@@ -24,15 +24,6 @@ export const outputSchema = {
 			message: z.string()
 				.optional()
 				.describe("The error message."),
-			schema: z.any()
-				.optional()
-				.describe("The value of the failing keyword in the schema."),
-			parentSchema: z.record(z.any())
-				.optional()
-				.describe("The schema containing the keyword."),
-			data: z.any()
-				.optional()
-				.describe("The data validated by the keyword."),
 		})
 	).describe("Array of validation error objects as returned by Ajv."),
 };

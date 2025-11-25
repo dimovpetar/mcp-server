@@ -135,7 +135,7 @@ export default async function runValidation(manifestPath: string): Promise<RunSc
 
 	// Map AJV errors to our schema format
 	const validationErrors = validate.errors ?? [];
-	const errors = validationErrors.map((error) => {
+	const errors = validationErrors.map((error): RunSchemaValidationResult["errors"][number] => {
 		return {
 			keyword: error.keyword ?? "",
 			instancePath: error.instancePath ?? "",
@@ -143,9 +143,6 @@ export default async function runValidation(manifestPath: string): Promise<RunSc
 			params: error.params ?? {},
 			propertyName: error.propertyName,
 			message: error.message,
-			schema: error.schema,
-			parentSchema: error.parentSchema,
-			data: error.data,
 		};
 	});
 
