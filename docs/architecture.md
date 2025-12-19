@@ -78,6 +78,15 @@ Tool Name | Description
 `get_typescript_conversion_guidelines` | Provides guidelines for converting UI5 applications and controls from JavaScript to TypeScript
 `get_version_info` | Retrieves version information for the UI5 framework
 `run_ui5_linter` | Integrates with `@ui5/linter` to analyze and report issues in UI5 code
+`run_manifest_validation` | Validates the manifest against the UI5 Manifest schema
+
+### create_integration_card
+
+The `create_integration_card` tool is designed to scaffold new UI Integration Cards using predefined templates. It automates the setup process, ensuring that developers can quickly start building integration cards without manually configuring the project structure.
+
+Templates are stored in the `resources/` directory of the project. There is currently one template for every declarative card type (List Card, Table Card, etc.).
+
+For rendering the templates with the provided data, the [EJS](https://github.com/mde/ejs) templating engine is used. 
 
 ### create_ui5_app
 
@@ -186,6 +195,10 @@ Drawbacks of the current approach using the semantic model:
 ### get_guidelines
 
 The `get_guidelines` tool returns a single markdown resource containing best practices and guidelines for UI5 development, particularly targeted towards AI agents. The document can be found in the `resources/` directory of the project.
+
+### get_integration_cards_guidelines
+
+The `get_integration_cards_guidelines` tool returns a single markdown resource containing best practices and guidelines for UI Integration Cards development. The content is particularly targeted towards AI agents. The document can be found in the `resources/` directory of the project.
 
 ### get_project_info
 
@@ -484,6 +497,107 @@ In the future, these guides should be moved into the UI5 linter project. See als
 	}
 }
 ```
+
+### run_manifest_validation
+
+The `run_manifest_validation` tool provides comprehensive schema validation for UI5 manifest files (`manifest.json`). It ensures that manifest files conform to the official UI5 Manifest JSON Schema, helping developers catch configuration errors early in the development process.
+
+#### Overview
+
+This tool uses the [Ajv JSON schema validator](https://www.npmjs.com/package/ajv) (specifically Ajv 2020-12) to perform validation against the official manifest schema. The schema is dynamically fetched from the [UI5 Manifest repository](https://github.com/SAP/ui5-manifest) based on the `_version` property declared in the manifest file.
+
+#### Schema Management
+
+**Version Detection:**
+- The tool automatically detects the manifest version from the `_version` property
+- If the `_version` property is missing, malformed, or not a valid semantic version, validation fails with a helpful error message listing supported versions
+- The minimum supported manifest version is **1.68.0** (earlier versions use incompatible meta-schemas)
+
+**Schema Retrieval:**
+- Schemas are fetched from: `https://raw.githubusercontent.com/SAP/ui5-manifest/v{version}/schema.json`
+- A version mapping is maintained at: `https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json`
+- Schemas are cached locally after first fetch to improve performance and reduce network requests
+- External schemas referenced by the UI5 manifest schema (e.g., Adaptive Card schema) are also fetched and cached as needed.
+
+#### Validation Process
+
+- Reads the manifest file from the provided absolute path
+- Parses the JSON content and extracts the `_version` property
+- Fetches the corresponding schema based on the version
+- Uses Ajv to validate the manifest against the schema
+- Returns a detailed report of validation results, including specific error messages for any violations found
+
+#### Performance Characteristics
+
+**Caching Strategy:**
+- Schema files are cached in memory after first retrieval
+- Cache is shared across multiple validation calls in the same process
+- Mutex locks prevent duplicate concurrent downloads of the same schema
+- Network requests are only made once per schema version per process lifecycle
+
+#### Error Handling
+
+**Input Errors:**
+- Non-absolute paths: `InvalidInputError` with clear message
+- File not found: `InvalidInputError` indicating the file doesn't exist
+- Invalid JSON: `InvalidInputError` with JSON parsing error details
+- Missing `_version`: Detailed error with list of supported versions
+- Unsupported version: Error message with version requirements and supported versions list
+
+**Network Errors:**
+- Schema fetch failures are caught and reported with helpful context
+- The tool provides fallback error messages even if the supported versions list cannot be fetched
+- Cached schemas allow continued operation even if the network is unavailable after initial setup
+
+#### Example Input
+
+```json
+{
+	"manifestPath": "/absolute/path/to/project/webapp/manifest.json"
+}
+```
+
+#### Example Output for Invalid Manifest
+
+```json
+{
+	"isValid": false,
+	"errors": [
+		{
+			"keyword": "required",
+			"instancePath": "",
+			"schemaPath": "#/required",
+			"params": {
+				"missingProperty": "sap.ui"
+			},
+			"message": "must have required property 'sap.ui'"
+		},
+		{
+			"keyword": "required",
+			"instancePath": "/sap.app",
+			"schemaPath": "#/properties/sap.app/required",
+			"params": {
+				"missingProperty": "title"
+			},
+			"message": "must have required property 'title'"
+		}
+	]
+}
+```
+
+#### Example Output for Valid Manifest
+
+```json
+{
+	"isValid": true,
+	"errors": []
+}
+```
+
+#### Requirements
+
+- **Network Access**: Initial schema fetch requires internet connectivity
+- **Manifest Versioning**: The manifest must declare a valid `_version` property
 
 ## Resources
 
