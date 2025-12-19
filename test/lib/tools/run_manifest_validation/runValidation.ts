@@ -365,3 +365,31 @@ test("runValidation patches external adaptive-card.json schema", async (t) => {
 		errors: [],
 	});
 });
+
+test("runValidation handles properties with 'format=uri'", async (t) => {
+	const {runValidation, getManifestSchemaStub} = t.context;
+
+	// Stub the readFile function to return a manifest with invalid "$schema" URI
+	t.context.manifestFileContent = JSON.stringify({
+		_version: "1.0.0",
+		$schema: "invalid-uri-format",
+	});
+
+	getManifestSchemaStub.resolves({
+		type: "object",
+		properties: {
+			_version: {type: "string"},
+			$schema: {
+				description: "A URI to the schema",
+				format: "uri",
+				type: "string",
+			},
+		},
+		required: ["$schema"],
+		additionalProperties: false,
+	});
+
+	const result = await runValidation("/path/to/manifest.json");
+
+	t.is(result.isValid, false);
+});
