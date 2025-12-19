@@ -39,12 +39,12 @@ test.afterEach.always((t) => {
 test("runValidation successfully validates valid manifest", async (t) => {
 	const {runValidation, fetchCdnStub} = t.context;
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/main/mapping.json")
 		.resolves({
 			"1.79.0": "1.79.0",
 		});
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.79.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/v1.79.0/schema.json")
 		.resolves(schemaFixture);
 
 	const result = await runValidation(path.join(fixturesPath, "valid-manifest.json"));
@@ -58,12 +58,12 @@ test("runValidation successfully validates valid manifest", async (t) => {
 test("runValidation successfully validates valid manifest after first attempt ending with exception", async (t) => {
 	const {runValidation, fetchCdnStub} = t.context;
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/main/mapping.json")
 		.resolves({
 			"1.79.0": "1.79.0",
 		});
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.79.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/v1.79.0/schema.json")
 		.resolves(schemaFixture);
 
 	await t.throwsAsync(async () => {
@@ -85,12 +85,12 @@ test("runValidation successfully validates valid manifest after first attempt en
 	async (t) => {
 		const {runValidation, fetchCdnStub} = t.context;
 
-		fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+		fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/main/mapping.json")
 			.resolves({
 				"1.79.0": "1.79.0",
 			});
 
-		fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.79.0/schema.json")
+		fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/v1.79.0/schema.json")
 			.onFirstCall()
 			.rejects(new Error("Failed to fetch schema"))
 			.onSecondCall()

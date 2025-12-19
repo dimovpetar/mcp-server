@@ -504,7 +504,7 @@ The `run_manifest_validation` tool provides comprehensive schema validation for 
 
 #### Overview
 
-This tool uses the [Ajv JSON schema validator](https://www.npmjs.com/package/ajv) (specifically Ajv 2020-12) to perform validation against the official manifest schema. The schema is dynamically fetched from the [UI5 Manifest repository](https://github.com/SAP/ui5-manifest) based on the `_version` property declared in the manifest file.
+This tool uses the [Ajv JSON schema validator](https://www.npmjs.com/package/ajv) (specifically Ajv 2020-12) to perform validation against the official manifest schema. The schema is dynamically fetched from the [UI5 Manifest repository](https://github.com/UI5/manifest) based on the `_version` property declared in the manifest file.
 
 #### Schema Management
 
@@ -514,8 +514,8 @@ This tool uses the [Ajv JSON schema validator](https://www.npmjs.com/package/ajv
 - The minimum supported manifest version is **1.68.0** (earlier versions use incompatible meta-schemas)
 
 **Schema Retrieval:**
-- Schemas are fetched from: `https://raw.githubusercontent.com/SAP/ui5-manifest/v{version}/schema.json`
-- A version mapping is maintained at: `https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json`
+- Schemas are fetched from: `https://raw.githubusercontent.com/UI5/manifest/v{version}/schema.json`
+- A version mapping is maintained at: `https://raw.githubusercontent.com/UI5/manifest/main/mapping.json`
 - Schemas are cached locally after first fetch to improve performance and reduce network requests
 - External schemas referenced by the UI5 manifest schema (e.g., Adaptive Card schema) are also fetched and cached as needed.
 

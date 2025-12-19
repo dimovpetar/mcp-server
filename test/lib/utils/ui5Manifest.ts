@@ -110,7 +110,7 @@ test("getManifestSchema throws error for unsupported versions 1.x.x versions", a
 		}
 	);
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/main/mapping.json")
 		.resolves({
 			"1.55.0": "1.55.0",
 			"1.67.0": "1.67.0",
@@ -144,7 +144,7 @@ test("getManifestSchema fetches schema for specific version", async (t) => {
 		type: "object",
 	};
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.68.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/v1.68.0/schema.json")
 		.resolves(mockSchema);
 
 	const schema = await getManifestSchema("1.68.0");
@@ -160,7 +160,7 @@ test("getManifestSchema uses cache on subsequent calls", async (t) => {
 		type: "object",
 	};
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.68.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/v1.68.0/schema.json")
 		.resolves(mockSchema);
 
 	const schema1 = await getManifestSchema("1.68.0");
@@ -175,10 +175,10 @@ test("getManifestSchema handles fetch errors", async (t) => {
 	const {fetchCdnStub, getManifestSchema} = t.context;
 
 	// Mock fetch error
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/main/mapping.json")
 		.rejects(new Error("Mapping.json error"));
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.68.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/v1.68.0/schema.json")
 		.rejects(new Error("Network error"));
 
 	await t.throwsAsync(
@@ -196,13 +196,13 @@ test("getManifestSchema handles fetch errors and gives more details about suppor
 	const {fetchCdnStub, getManifestSchema} = t.context;
 
 	// Mock fetch error
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/main/mapping.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/main/mapping.json")
 		.resolves({
 			"1.70.0": "1.70.0",
 			"1.71.0": "1.71.0",
 		});
 
-	fetchCdnStub.withArgs("https://raw.githubusercontent.com/SAP/ui5-manifest/v1.69.0/schema.json")
+	fetchCdnStub.withArgs("https://raw.githubusercontent.com/UI5/manifest/v1.69.0/schema.json")
 		.rejects(new Error("Network error"));
 
 	await t.throwsAsync(
