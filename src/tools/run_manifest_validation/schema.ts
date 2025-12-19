@@ -16,7 +16,7 @@ export const outputSchema = {
 				.describe("JSON Pointer to the location in the data instance (e.g., `/prop/1/subProp`)."),
 			schemaPath: z.string()
 				.describe("JSON Pointer to the location of the failing keyword in the schema."),
-			params: z.record(z.any())
+			params: z.record(z.any(), z.any())
 				.describe("An object with additional information about the error."),
 			propertyName: z.string()
 				.optional()
