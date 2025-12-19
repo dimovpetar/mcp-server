@@ -67,9 +67,13 @@ async function failWithSupportedVersionsHint(errorMessage: string): Promise<neve
 
 	try {
 		const versionMap = await getUI5toManifestVersionMapping();
-		supportedVersions = Object.values(versionMap).filter(
-			(version) => semver.gte(version, LOWEST_SUPPORTED_MANIFEST_VERSION)
-		);
+		supportedVersions = [
+			...new Set(
+				Object.values(versionMap).filter(
+					(version) => semver.gte(version, LOWEST_SUPPORTED_MANIFEST_VERSION)
+				)
+			),
+		];
 	} catch (_) {
 		supportedVersions = null;
 	};
