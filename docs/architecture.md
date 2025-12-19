@@ -198,7 +198,7 @@ The `get_guidelines` tool returns a single markdown resource containing best pra
 
 ### get_integration_cards_guidelines
 
-The `get_integration_cards_guidelines` tool returns a single markdown resource containing best practices and guidelines for UI Integration Cards development. The content is particularly targeted towards AI agents. The document can be found in the `resources/` directory of the project.
+The `get_integration_cards_guidelines` tool returns a single markdown resource containing best practices and guidelines for UI Integration Cards development. The content is particularly targeted towards AI agents. This document can be found in the `resources/` directory of the project.
 
 ### get_project_info
 
@@ -517,7 +517,7 @@ This tool uses the [Ajv JSON schema validator](https://www.npmjs.com/package/ajv
 - Schemas are fetched from: `https://raw.githubusercontent.com/UI5/manifest/v{version}/schema.json`
 - A version mapping is maintained at: `https://raw.githubusercontent.com/UI5/manifest/main/mapping.json`
 - Schemas are cached locally after first fetch to improve performance and reduce network requests
-- External schemas referenced by the UI5 manifest schema (e.g., Adaptive Card schema) are also fetched and cached as needed.
+- External schemas referenced by the UI5 manifest schema (e.g., Adaptive Card schema) are also fetched and cached as needed
 
 #### Validation Process
 
